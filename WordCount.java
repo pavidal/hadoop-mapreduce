@@ -126,8 +126,9 @@ public class WordCount {
         Configuration conf = new Configuration();
 
         Job job = Job.getInstance(conf, "word count");
-        // job.setNumReduceTasks(25);
+        job.setNumReduceTasks(7);
         job.setJarByClass(WordCount.class);
+        job.setCombinerClass(WCReducer.class);
         job.setMapperClass(WCMapper.class);
         job.setReducerClass(WCReducer.class);
         job.setOutputKeyClass(Text.class);
