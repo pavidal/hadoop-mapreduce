@@ -24,17 +24,20 @@ public class WordCount {
     private static int n = 3;
 
     /**
-     * Custom partitioner class. This assigns n-grams to partitions according to their startig character.
-     * Up to 26 reducers/partitions can be used, minimum one for each character in the alphabet.
+     * Custom partitioner class. This assigns n-grams to partitions according to
+     * their startig character.
+     * Up to 26 reducers/partitions can be used, minimum one for each character in
+     * the alphabet.
      */
     public static class WCPartitioner extends Partitioner<Text, IntWritable> {
         private static int range = ('z' + 1) - 'a';
 
         public int getPartition(Text key, IntWritable value, int numPartitions) {
             if (numPartitions > 26)
-                throw new IllegalArgumentException("Only up to 26 reducers are supported, since there's 26 letters in the alphabet.");
+                throw new IllegalArgumentException(
+                        "Only up to 26 reducers are supported, since there's 26 letters in the alphabet.");
 
-            int current = key.toString().charAt(0);                 // offset character so 'a' starts at 0
+            int current = key.toString().charAt(0); // offset character so 'a' starts at 0
 
             // assign n-grams that starts with a number to be on the first partition
             // lazy workaround but e-books don't have that many numbers compared to letters
@@ -44,12 +47,16 @@ public class WordCount {
             // cutoff point for each partition
             int boundary = range / numPartitions;
 
-            // by truncating the result, this (should've) give a partition number in the range of no. of reducers
+            // by truncating the result, this (should've) give a partition number in the
+            // range of no. of reducers
             int partitionNumber = (current - 'a') / boundary;
 
-            // float -> int doesn't truncate properly so partition number is clamped for later chars
-            // may have a performance impact on jobs with lower number of reducers (letters 't' and 'y' appears often in English)
-            // performance loss becomes less relevant as the number of reducers approaches 26
+            // float -> int doesn't truncate properly so partition number is clamped for
+            // later chars
+            // may have a performance impact on jobs with lower number of reducers (letters
+            // 't' and 'y' appears often in English)
+            // performance loss becomes less relevant as the number of reducers approaches
+            // 26
             return (partitionNumber >= numPartitions ? numPartitions - 1 : partitionNumber);
         }
     }
@@ -76,7 +83,7 @@ public class WordCount {
                     nGram.set(currentToken);
                     context.write(nGram, one);
 
-                } else if (queue.size() == n-1) {   // n-1 saves one loop per n-gram.
+                } else if (queue.size() == n - 1) { // n-1 saves one loop per n-gram.
                     // Does multiple things here:
                     // The head of the queue is removed,
                     // peekList() then appends the rest of the queue
@@ -85,12 +92,14 @@ public class WordCount {
                     context.write(nGram, one);
                 }
 
-                if (n > 1) queue.add(currentToken);     // only add if queue exists
+                if (n > 1)
+                    queue.add(currentToken); // only add if queue exists
             }
         }
 
         /**
          * Reads all strings in a queue and concatinates into a space-delimited string
+         *
          * @param queue A queue of Strings
          * @return Space-delimited String of all elements
          */
@@ -133,6 +142,8 @@ public class WordCount {
         // Disk I/O optimisation by using LZO compression
         // Introduces minor CPU overhead
         conf.set("mapreduce.map.output.compress", "true");
+
+        // For testing only
         // job.setNumReduceTasks(7);
 
         job.setJarByClass(WordCount.class);
